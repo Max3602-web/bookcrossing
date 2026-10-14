@@ -104,15 +104,30 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', requireAuth, async (req, res) => {
   const { title, author_id, description, status_id } = req.body || {};
+
   if (!title || !author_id) {
     return res.status(400).json({ error: 'title и author_id обязательны' });
   }
+
+  const authorId = Number(author_id);
+  if (!Number.isInteger(authorId) || authorId <= 0) {
+    return res.status(400).json({ error: 'author_id должен быть целым положительным числом' });
+  }
+
+  let statusId = 1;
+  if (status_id !== undefined) {
+    statusId = Number(status_id);
+    if (!Number.isInteger(statusId) || statusId <= 0) {
+      return res.status(400).json({ error: 'status_id должен быть целым положительным числом' });
+    }
+  }
+
   try {
     const book = await createBook({
       title,
-      author_id: Number(author_id),
+      author_id: authorId,
       description,
-      status_id: status_id ? Number(status_id) : 1,
+      status_id: statusId,
       owner_id: req.user.user_id,
     });
     return res.status(201).json(book);
